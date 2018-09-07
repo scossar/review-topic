@@ -1,0 +1,4 @@
+plugins:
+  yearly_review_enabled:
+    default: true
+    client: true
