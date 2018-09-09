@@ -2,3 +2,20 @@ plugins:
   yearly_review_enabled:
     default: true
     client: true
+  yearly_review_title:
+    default: "Yearly Review Topic"
+  yearly_review_categories:
+    type: category_list
+    default: ''
+  yearly_review_publish_category:
+    type: category
+    default: ''
+  yearly_review_period:
+    default: 'year'
+    type: enum
+    choices:
+      - all
+      - year
+      - quarter
+      - month
+      - week
