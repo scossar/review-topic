@@ -19,9 +19,9 @@ after_initialize do
     end
   end
 
-  # [
-  #
-  # ].each { |path| load File.expand_path(path, __FILE__) }
+  [
+    '../../discourse-yearly-review/app/jobs/yearly_review.rb'
+  ].each { |path| load File.expand_path(path, __FILE__) }
 
   require_dependency 'admin/admin_controller'
   class YearlyReview::YearlyReviewController < ::Admin::AdminController
