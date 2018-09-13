@@ -31,7 +31,6 @@ module ::Jobs
     end
 
     def yearly_review_categories
-      # todo: maybe this should just return a comma separated string (that's what the query uses)
       SiteSetting.yearly_review_categories.split('|').map{ |x| x.to_i }
     end
 
@@ -75,7 +74,7 @@ module ::Jobs
         LIMIT 15
       SQL
 
-      output = "<h3>Topics Created<h3><table><tr><th>User</th><th>Topics</th></tr>"
+      output = "<h3>#{I18n.t('yearly_review.topics_created')}<h3><table><tr><th>#{I18n.t('yearly_review.user')}</th><th>#{I18n.t('yearly_review.topics')}</th></tr>"
 
       DB.query(sql).each do |row|
         avatar_template = User.avatar_template(row.username, row.uploaded_avatar_id).gsub(/{size}/, '25')
@@ -109,7 +108,7 @@ module ::Jobs
         LIMIT 15
       SQL
 
-      output = "<h3>Replies Created<h3><table><tr><th>User</th><th>Replies</th></tr>"
+      output = "<h3>#{I18n.t('yearly_review.replies_created')}<h3><table><tr><th>#{I18n.t('yearly_review.user')}</th><th>#{I18n.t('yearly_review.replies')}</th></tr>"
 
       DB.query(sql).each do |row|
         avatar_template = User.avatar_template(row.username, row.uploaded_avatar_id).gsub(/{size}/, '25')
@@ -139,7 +138,7 @@ module ::Jobs
         LIMIT 15
       SQL
 
-      output = "<h3>Most Visits<h3><table><tr><th>User</th><th>Visits</th></tr>"
+      output = "<h3>#{I18n.t('yearly_review.most_visits')}<h3><table><tr><th>#{I18n.t('yearly_review.user')}</th><th>#{I18n.t('yearly_review.visits')}</th></tr>"
 
       DB.query(sql).each do |row|
         avatar_template = User.avatar_template(row.username, row.uploaded_avatar_id).gsub(/{size}/, '25')
@@ -170,7 +169,7 @@ module ::Jobs
         LIMIT 15
       SQL
 
-      output = "<h3>Most Likes Given<h3><table><tr><th>User</th><th>Likes Given</th></tr>"
+      output = "<h3>#{I18n.t('yearly_review.most_likes_given')}<h3><table><tr><th>#{I18n.t('yearly_review.user')}</th><th>#{I18n.t('yearly_review.likes_given')}</th></tr>"
 
       DB.query(sql).each do |row|
         avatar_template = User.avatar_template(row.username, row.uploaded_avatar_id).gsub(/{size}/, '25')
@@ -183,7 +182,7 @@ module ::Jobs
     end
 
     def top_topics
-      output = "<h3>Most Popular Topics</h3> \r\r"
+      output = "<h3>#{I18n.t('yearly_review.most_popular_topics')}</h3> \r\r"
       yearly_review_categories.each do |cat_id|
         sql = <<~SQL
           SELECT
@@ -201,7 +200,7 @@ module ::Jobs
         SQL
 
         category = Category.find(cat_id)
-        output += "<h4>#{category.name}</h4>\r\r"
+        output += "<a href='/c/#{category.slug}'><h4>#{category.name}</h4></a>\r\r"
 
         DB.query(sql).each do |row|
           url = "#{Discourse.base_url}/t/#{row.slug}/#{row.id}"
@@ -214,23 +213,30 @@ module ::Jobs
     end
 
     def most_liked_topics
-      sql = <<~SQL
-        SELECT
-        t.id,
-        t.slug
-        FROM topics t
-        JOIN top_topics tt
-        ON tt.topic_id = t.id
-        JOIN categories c
-        ON c.id = t.category_id
-        WHERE c.read_restricted = 'false'
-        ORDER BY tt.yearly_likes_count DESC
-        LIMIT 5
-      SQL
-      output = "<h3>Most Liked Topics</h3> \r\r"
-      DB.query(sql).each do |row|
-        url = "#{Discourse.base_url}/t/#{row.slug}/#{row.id}"
-        output += "#{url} \r\r"
+      output = "<h3>#{I18n.t('yearly_review.most_liked_topics')}</h3>\r\r"
+      yearly_review_categories.each do |cat_id|
+        sql = <<~SQL
+          SELECT
+          t.id,
+          t.slug AS topic_slug,
+          c.slug AS category_slug,
+          c.name AS category_name
+          FROM topics t
+          JOIN top_topics tt
+          ON tt.topic_id = t.id
+          JOIN categories c
+          ON c.id = t.category_id
+          WHERE c.read_restricted = 'false'
+          AND c.id = #{cat_id}
+          ORDER BY tt.yearly_likes_count DESC
+          LIMIT 5
+        SQL
+
+        DB.query(sql).each_with_index do |row, i|
+          output += "<a class='hashtag' href='/c/#{row.category_slug}'><h4>##{row.category_name}</h4></a>\r\r" if i == 0
+          url = "#{Discourse.base_url}/t/#{row.topic_slug}/#{row.id}"
+          output += "#{url} \r\r"
+        end
       end
 
       output
@@ -250,7 +256,7 @@ module ::Jobs
         ORDER BY tt.yearly_posts_count DESC
         LIMIT 5
       SQL
-      output = "<h3>Most Replied to Topics</h3> \r\r"
+      output = "<h3>#{I18n.t('yearly_review.most_replied_to_topics')}</h3>\r\r"
       DB.query(sql).each do |row|
         url = "#{Discourse.base_url}/t/#{row.slug}/#{row.id}"
         output += "#{url} \r\r"
