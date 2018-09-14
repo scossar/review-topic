@@ -10,9 +10,9 @@ module ::Jobs
       output += most_likes_given start_date, end_date
       output += most_visits start_date, end_date
       output += '</div>'
-      output += top_topics
+      output += most_popular_topics
       output += most_liked_topics
-      output += most_replied_to_topics
+      output += most_replied_topics
       opts = {
         title: "#{yearly_review_title} - #{rand(100000)}",
         raw: output,
@@ -30,6 +30,7 @@ module ::Jobs
       SiteSetting.yearly_review_title
     end
 
+    # todo: only fetch this once!
     def yearly_review_categories
       SiteSetting.yearly_review_categories.split('|').map{ |x| x.to_i }
     end
@@ -187,7 +188,9 @@ module ::Jobs
         sql = <<~SQL
           SELECT
           t.id,
-          t.slug
+          t.slug AS topic_slug,
+          c.slug AS category_slug,
+          c.name AS category_name
           FROM topics t
           JOIN top_topics tt
           ON tt.topic_id = t.id
@@ -199,20 +202,36 @@ module ::Jobs
           LIMIT 5
         SQL
 
-        category = Category.find(cat_id)
-        output += "<a href='/c/#{category.slug}'><h4>#{category.name}</h4></a>\r\r"
-
-        DB.query(sql).each do |row|
-          url = "#{Discourse.base_url}/t/#{row.slug}/#{row.id}"
+        DB.query(sql).each_with_index do |row, i|
+          output += "<a class='hashtag' href='/c/#{row.category_slug}'><h4>##{row.category_name}</h4></a>\r\r" if i == 0
+          url = "#{Discourse.base_url}/t/#{row.topic_slug}/#{row.id}"
           output += "#{url} \r\r"
         end
-
       end
 
       output
     end
 
-    def most_liked_topics
+    def most_popular_topics_sql
+      <<~SQL
+          SELECT
+          t.id,
+          t.slug AS topic_slug,
+          c.slug AS category_slug,
+          c.name AS category_name
+          FROM topics t
+          JOIN top_topics tt
+          ON tt.topic_id = t.id
+          JOIN categories c
+          ON c.id = t.category_id
+          WHERE c.read_restricted = 'false'
+          AND c.id = :cat_id
+          ORDER BY #{topics_order '_score'} DESC
+          LIMIT 5
+      SQL
+    end
+
+    def most_liked_topics_bak
       output = "<h3>#{I18n.t('yearly_review.most_liked_topics')}</h3>\r\r"
       yearly_review_categories.each do |cat_id|
         sql = <<~SQL
@@ -242,24 +261,95 @@ module ::Jobs
       output
     end
 
-    def most_replied_to_topics
-      sql = <<~SQL
+    def most_liked_sql
+      <<~SQL
+          SELECT
+          t.id,
+          t.slug AS topic_slug,
+          c.slug AS category_slug,
+          c.name AS category_name
+          FROM topics t
+          JOIN top_topics tt
+          ON tt.topic_id = t.id
+          JOIN categories c
+          ON c.id = t.category_id
+          WHERE c.read_restricted = 'false'
+          AND c.id = :cat_id
+          ORDER BY tt.yearly_likes_count DESC
+          LIMIT 5
+      SQL
+    end
+
+    # def most_replied_to_topics
+    #   output = "<h3>#{I18n.t('yearly_review.most_replied_to_topics')}</h3>\r\r"
+    #   yearly_review_categories.each do |cat_id|
+    #     sql = <<~SQL
+    #     SELECT
+    #     t.id,
+    #     t.slug AS topic_slug,
+    #     c.slug AS category_slug,
+    #     c.name AS category_name
+    #     FROM topics t
+    #     JOIN top_topics tt
+    #     ON tt.topic_id = t.id
+    #     JOIN categories c
+    #     ON c.id = t.category_id
+    #     WHERE c.read_restricted = 'false'
+    #     AND c.id = #{cat_id}
+    #     ORDER BY tt.yearly_posts_count DESC
+    #     LIMIT 5
+    #     SQL
+    #
+    #     DB.query(sql).each_with_index do |row, i|
+    #       output += "<a class='hashtag' href='/c/#{row.category_slug}'><h4>##{row.category_name}</h4></a>\r\r" if i == 0
+    #       url = "#{Discourse.base_url}/t/#{row.topic_slug}/#{row.id}"
+    #       output += "#{url} \r\r"
+    #     end
+    #   end
+    #
+    #   output
+    # end
+
+    def most_replied_sql
+      <<~SQL
         SELECT
         t.id,
-        t.slug
+        t.slug AS topic_slug,
+        c.slug AS category_slug,
+        c.name AS category_name
         FROM topics t
         JOIN top_topics tt
         ON tt.topic_id = t.id
         JOIN categories c
         ON c.id = t.category_id
         WHERE c.read_restricted = 'false'
+        AND c.id = :cat_id
         ORDER BY tt.yearly_posts_count DESC
         LIMIT 5
       SQL
-      output = "<h3>#{I18n.t('yearly_review.most_replied_to_topics')}</h3>\r\r"
-      DB.query(sql).each do |row|
-        url = "#{Discourse.base_url}/t/#{row.slug}/#{row.id}"
-        output += "#{url} \r\r"
+    end
+
+    def most_popular_topics
+      category_topics('most_popular_topics', most_popular_topics_sql)
+    end
+
+    def most_replied_topics
+      category_topics('most_replied_to_topics', most_replied_sql)
+    end
+
+    def most_liked_topics
+      category_topics('most_liked_topics', most_liked_sql)
+    end
+
+
+    def category_topics(title_key, sql)
+      output = "<h3>#{I18n.t('yearly_review.' + title_key)}</h3>\r\r"
+      yearly_review_categories.each do |cat_id|
+        DB.query(sql, cat_id: cat_id).each_with_index do |row, i|
+          output += "<a class='hashtag' href='/c/#{row.category_slug}'><h4>##{row.category_name}</h4></a>\r\r" if i == 0
+          url = "#{Discourse.base_url}/t/#{row.topic_slug}/#{row.id}"
+          output += "#{url} \r\r"
+        end
       end
 
       output
