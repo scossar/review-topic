@@ -1,3 +1,56 @@
-<div class="form-horizontal settings">
-  {{create-review}}
+<div class="pull-left">
+  <div class="form-horizontal settings">
+    <div class="row setting">
+      <div class="setting-label">
+        Review Title
+      </div>
+      <div class="setting-value">
+        {{input class="review-title"}}
+      </div>
+    </div>
+    <div class="row setting">
+      <div class="setting-label">
+        Review Categories
+      </div>
+      <div class="setting-value">
+        {{category-selector class="review-categories"}}
+      </div>
+    </div>
+    <div class="row setting">
+      <div class="setting-label">
+        Featured Badge
+      </div>
+      <div class="setting-value">
+        {{input class="review-featured-badge"}}
+      </div>
+    </div>
+    <div class="row setting">
+      <div class="setting-label">
+        Start Date
+      </div>
+      <div class="setting-value">
+        {{date-picker-past class="review-start"}}
+      </div>
+    </div>
+    <div class="row setting">
+      <div class="setting-label">
+        End Date
+      </div>
+      <div class="setting-value">
+        {{date-picker-past class="review-end"}}
+      </div>
+    </div>
+    <div class="row setting">
+      <div class="setting-label">
+        Publish Category
+      </div>
+      <div class="setting-value">
+        {{input class="review-publish-category"}}
+      </div>
+    </div>
+    <div class="create-review">
+      {{create-review}}
+    </div>
+  </div>
 </div>
+

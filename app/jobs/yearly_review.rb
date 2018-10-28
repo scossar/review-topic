@@ -1,39 +1,48 @@
 module ::Jobs
-  class YearlyReview < ::Jobs::Scheduled
-    every 1.day
+  class YearlyReview < ::Jobs::Base
+
     sidekiq_options retry: true, queue: 'critical'
 
-    def execute
+    def execute(args = {})
+      review_title = args[:title]
+      review_categories = args[:categories].split(',').map{ |x| x.to_i }
+      # review_featured_badge = args[:badge]
+      review_start = Date.parse(args[:review_start]).beginning_of_day
+      review_end = Date.parse(args[:review_end]).end_of_day
+      review_publish_category = args[:review_publish_category]
+      review_user = args[:review_user]
+
       output = "<div data-review='review-topic'><h2>Top Users</h2>"
-      output += most_topics start_date, end_date
-      output += most_replies start_date, end_date
-      output += most_likes_given start_date, end_date
-      output += most_visits start_date, end_date
+      output += most_topics review_categories, review_start, review_end
+      output += most_replies review_categories, review_start, review_end
+      output += most_likes_given review_start, review_end
+      output += most_visits review_start, review_end
       output += '</div>'
-      output += most_popular_topics
-      output += most_liked_topics
-      output += most_replied_topics
+      # output += most_popular_topics "#{review_period}_score", review_categories
+      output += most_liked_topics review_start, review_end, review_categories
+      output += most_liked_posts review_start, review_end, review_categories
+      output += most_replied_to_topics review_start, review_end, review_categories
       opts = {
-        title: "#{yearly_review_title} - #{rand(100000)}",
+        title: "#{review_title} - #{rand(100000)}",
         raw: output,
-        category: publish_category_name,
+        category: review_publish_category,
       }
-      PostCreator.create!(User.find(1), opts)
+      PostCreator.create!(review_user, opts)
     end
 
-    def publish_category_name
-      Category.find(SiteSetting.yearly_review_publish_category).name
-    end
-
-    def yearly_review_title
-      # todo: if the title isn't set, create it from the start and end dates
-      SiteSetting.yearly_review_title
-    end
-
+    # def publish_category_name
+    #   Category.find(SiteSetting.yearly_review_publish_category).name
+    # end
+    #
+    # def yearly_review_title
+    #   todo: if the title isn't set, create it from the start and end dates
+      # SiteSetting.yearly_review_title
+    # end
+    #
     # todo: only fetch this once!
-    def yearly_review_categories
-      SiteSetting.yearly_review_categories.split('|').map{ |x| x.to_i }
-    end
+    # def yearly_review_categories
+    #   SiteSetting.yearly_review_categories.split('|').map{ |x| x.to_i }
+    # end
 
     def start_date
       period = SiteSetting.yearly_review_period
@@ -55,7 +64,7 @@ module ::Jobs
       period + query_property
     end
 
-    def most_topics(start_date, end_date)
+    def most_topics(categories, start_date, end_date)
       sql = <<~SQL
         SELECT
         t.user_id,
@@ -69,7 +78,7 @@ module ::Jobs
         AND t.user_id > 0
         AND t.created_at >= '#{start_date}'
         AND t.created_at <= '#{end_date}'
-        AND t.category_id IN (#{yearly_review_categories.join(',')})
+        AND t.category_id IN (#{categories.join(',')})
         GROUP BY t.user_id, u.username, u.uploaded_avatar_id
         ORDER BY topic_count DESC
         LIMIT 15
@@ -87,7 +96,7 @@ module ::Jobs
       output += "</table>"
     end
 
-    def most_replies(start_date, end_date)
+    def most_replies(categories, start_date, end_date)
       sql = <<~SQL
         SELECT
         p.user_id,
@@ -104,6 +113,7 @@ module ::Jobs
         AND p.post_number > 1
         AND p.created_at >= '#{start_date}'
         AND p.created_at <= '#{end_date}'
+        AND t.category_id IN (#{categories.join(',')})
         GROUP BY p.user_id, u.username, u.uploaded_avatar_id
         ORDER BY reply_count DESC
         LIMIT 15
@@ -182,82 +192,107 @@ module ::Jobs
       output += "</table>"
     end
 
-    def most_popular_topics_sql
+    # todo: make sure the posts/topics being queried haven't been deleted
+    def likes_in_topic_sql
       <<~SQL
-          SELECT
-          t.id,
-          t.slug AS topic_slug,
-          c.slug AS category_slug,
-          c.name AS category_name
-          FROM topics t
-          JOIN top_topics tt
-          ON tt.topic_id = t.id
-          JOIN categories c
-          ON c.id = t.category_id
-          WHERE c.read_restricted = 'false'
-          AND c.id = :cat_id
-          ORDER BY #{topics_order '_score'} DESC
-          LIMIT 5
+      SELECT
+      t.id,
+      NULL AS post_number,
+      t.slug AS topic_slug,
+      c.slug AS category_slug,
+      c.name AS category_name,
+      COUNT(*) AS like_count
+      FROM post_actions pa
+      JOIN posts p
+      ON p.id = pa.post_id
+      JOIN topics t
+      ON t.id = p.topic_id
+      JOIN categories c
+      ON c.id = t.category_id
+      WHERE pa.created_at BETWEEN :start_date AND :end_date
+      AND pa.post_action_type_id = 2
+      AND c.id = :cat_id
+      AND c.read_restricted = 'false'
+      AND t.deleted_at IS NULL
+      GROUP BY t.id, topic_slug, category_slug, category_name, post_number
+      ORDER BY like_count DESC
+      LIMIT 5
       SQL
     end
 
-    def most_liked_sql
+    def most_liked_posts_sql
       <<~SQL
-          SELECT
-          t.id,
-          t.slug AS topic_slug,
-          c.slug AS category_slug,
-          c.name AS category_name
-          FROM topics t
-          JOIN top_topics tt
-          ON tt.topic_id = t.id
-          JOIN categories c
-          ON c.id = t.category_id
-          WHERE c.read_restricted = 'false'
-          AND c.id = :cat_id
-          ORDER BY tt.yearly_likes_count DESC
-          LIMIT 5
+      SELECT
+      t.id,
+      p.post_number,
+      t.slug AS topic_slug,
+      c.slug AS category_slug,
+      c.name AS category_name,
+      COUNT(*) AS like_count
+      FROM post_actions pa
+      JOIN posts p
+      ON p.id = pa.post_id
+      JOIN topics t
+      ON t.id = p.topic_id
+      JOIN categories c
+      ON c.id = t.category_id
+      WHERE pa.created_at BETWEEN :start_date AND :end_date
+      AND pa.post_action_type_id = 2
+      AND c.id = :cat_id
+      AND c.read_restricted = 'false'
+      AND p.deleted_at IS NULL
+      GROUP BY p.id, t.id, topic_slug, category_slug, category_name
+      ORDER BY like_count DESC
+      LIMIT 5
       SQL
     end
 
-    def most_replied_sql
+
+    def most_replied_to_topics_sql
       <<~SQL
-        SELECT
-        t.id,
-        t.slug AS topic_slug,
-        c.slug AS category_slug,
-        c.name AS category_name
-        FROM topics t
-        JOIN top_topics tt
-        ON tt.topic_id = t.id
-        JOIN categories c
-        ON c.id = t.category_id
-        WHERE c.read_restricted = 'false'
-        AND c.id = :cat_id
-        ORDER BY tt.yearly_posts_count DESC
-        LIMIT 5
+      SELECT
+      t.id,
+      NULL AS post_number,
+      t.slug AS topic_slug,
+      c.slug AS category_slug,
+      c.name AS category_name,
+      COUNT(*) AS post_count
+      FROM posts p
+      JOIN topics t
+      ON t.id = p.topic_id
+      JOIN categories c
+      ON c.id = t.category_id
+      WHERE p.created_at BETWEEN :start_date AND :end_date
+      AND c.id = :cat_id
+      AND c.read_restricted = 'false'
+      AND t.deleted_at IS NULL
+      GROUP BY p.id, t.id, topic_slug, category_slug, category_name
+      ORDER BY post_count DESC
+      LIMIT 5
       SQL
     end
 
-    def most_popular_topics
-      category_topics('most_popular_topics', most_popular_topics_sql)
+    def most_liked_topics start_date, end_date, cat_ids
+      category_topics('most_liked_topics', start_date, end_date, cat_ids, likes_in_topic_sql)
     end
 
-    def most_replied_topics
-      category_topics('most_replied_to_topics', most_replied_sql)
+    def most_liked_posts start_date, end_date, cat_ids
+      category_topics( 'most_liked_posts', start_date, end_date, cat_ids, most_liked_posts_sql)
     end
 
-    def most_liked_topics
-      category_topics('most_liked_topics', most_liked_sql)
+    def most_replied_to_topics start_date, end_date, cat_ids
+      category_topics('most_replied_to_topics', start_date, end_date, cat_ids, most_replied_to_topics_sql)
     end
 
 
-    def category_topics(title_key, sql)
+    def category_topics(title_key, start_date, end_date, category_ids, sql)
       output = "<h3>#{I18n.t('yearly_review.' + title_key)}</h3>\r\r"
-      yearly_review_categories.each do |cat_id|
-        DB.query(sql, cat_id: cat_id).each_with_index do |row, i|
+      category_ids.each do |cat_id|
+        DB.query(sql, start_date: start_date, end_date: end_date, cat_id: cat_id).each_with_index do |row, i|
+          p row
           output += "<a class='hashtag' href='/c/#{row.category_slug}'><h4>##{row.category_name}</h4></a>\r\r" if i == 0
           url = "#{Discourse.base_url}/t/#{row.topic_slug}/#{row.id}"
+          url += "/#{row.post_number}" if row.post_number
           output += "#{url} \r\r"
         end
       end

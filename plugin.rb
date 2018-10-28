@@ -30,6 +30,11 @@ after_initialize do
     end
 
     def create
+      puts "params #{params}"
+      p params
+      puts "end params"
+      start_date = Date.parse(params[:review_start]).beginning_of_day
+      end_date = Date.parse(params[:review_end]).end_of_day
       output = "<div data-review='review-topic'><h2>Top Users</h2>"
       output += most_topics start_date, end_date
       output += most_replies start_date, end_date
@@ -40,22 +45,25 @@ after_initialize do
       output += most_liked_topics
       output += most_replied_to_topics
       opts = {
-        title: "The Year in Review - #{rand(100000)}",
+        title: "#{params[:review_title]} - #{rand(100000)}",
         raw: output,
-        category: 'Site Feedback',
+        category: params[:review_publish_category],
       }
       PostCreator.create!(User.find(1), opts)
+
+      # Jobs::YearlyReview.new.execute(title: params[:review_title], categories: params[:review_categories], review_start: params[:review_start], review_end: params[:review_end], review_publish_category: params[:review_publish_category], review_user: User.find(1))
+
 
       render json: { success: true }
     end
 
-    def start_date
-      1.year.ago.beginning_of_day
-    end
-
-    def end_date
-      Date.today.end_of_day
-    end
+    # def start_date
+    #   1.year.ago.beginning_of_day
+    # end
+    #
+    # def end_date
+    #   Date.today.end_of_day
+    # end
 
     def most_topics(start_date, end_date)
       sql = <<~SQL
@@ -251,6 +259,12 @@ LIMIT 5
 
       output
     end
+  end
+
+  def users_with_badge
+    sql = <<~SQL
+
+    SQL
   end
 
   YearlyReview::Engine.routes.draw do
