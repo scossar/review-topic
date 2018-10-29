@@ -29,29 +29,34 @@ after_initialize do
 
     end
 
-    def create
-      puts "params #{params}"
-      p params
-      puts "end params"
-      start_date = Date.parse(params[:review_start]).beginning_of_day
-      end_date = Date.parse(params[:review_end]).end_of_day
-      output = "<div data-review='review-topic'><h2>Top Users</h2>"
-      output += most_topics start_date, end_date
-      output += most_replies start_date, end_date
-      output += most_likes_given start_date, end_date
-      output += most_visits start_date, end_date
-      output += '</div>'
-      output += top_topics
-      output += most_liked_topics
-      output += most_replied_to_topics
-      opts = {
-        title: "#{params[:review_title]} - #{rand(100000)}",
-        raw: output,
-        category: params[:review_publish_category],
-      }
-      PostCreator.create!(User.find(1), opts)
+    def create()
+      # puts "params #{review_params}"
+      # p params
+      # puts "end params"
+      # start_date = Date.parse(review_params[:review_start]).beginning_of_day
+      # end_date = Date.parse(review_params[:review_end]).end_of_day
+      # output = "<div data-review='review-topic'><h2>Top Users</h2>"
+      # output += most_topics start_date, end_date
+      # output += most_replies start_date, end_date
+      # output += most_likes_given start_date, end_date
+      # output += most_visits start_date, end_date
+      # output += '</div>'
+      # output += top_topics
+      # output += most_liked_topics
+      # output += most_replied_to_topics
+      # opts = {
+      #   title: "#{review_params[:review_title]} - #{rand(100000)}",
+      #   raw: output,
+      #   category: review_params[:review_publish_category],
+      # }
+      # PostCreator.create!(User.find(1), opts)
 
-      # Jobs::YearlyReview.new.execute(title: params[:review_title], categories: params[:review_categories], review_start: params[:review_start], review_end: params[:review_end], review_publish_category: params[:review_publish_category], review_user: User.find(1))
+      Jobs::YearlyReview.new.execute(title: params[:review_title],
+                                     categories: params[:review_categories],
+                                     review_start: params[:review_start],
+                                     review_end: params[:review_end],
+                                     review_publish_category: params[:review_publish_category],
+                                     review_user: User.find(1))
 
 
       render json: { success: true }

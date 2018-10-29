@@ -6,7 +6,7 @@ module ::Jobs
     def execute(args = {})
       review_title = args[:title]
       review_categories = args[:categories].split(',').map{ |x| x.to_i }
-      # review_featured_badge = args[:badge]
+      review_featured_badge = args[:badge]
       review_start = Date.parse(args[:review_start]).beginning_of_day
       review_end = Date.parse(args[:review_end]).end_of_day
       review_publish_category = args[:review_publish_category]
@@ -28,21 +28,8 @@ module ::Jobs
         category: review_publish_category,
       }
       PostCreator.create!(review_user, opts)
-    end
 
-    # def publish_category_name
-    #   Category.find(SiteSetting.yearly_review_publish_category).name
-    # end
-    #
-    # def yearly_review_title
-    #   todo: if the title isn't set, create it from the start and end dates
-      # SiteSetting.yearly_review_title
-    # end
-    #
-    # todo: only fetch this once!
-    # def yearly_review_categories
-    #   SiteSetting.yearly_review_categories.split('|').map{ |x| x.to_i }
-    # end
+    end
 
     def start_date
       period = SiteSetting.yearly_review_period
