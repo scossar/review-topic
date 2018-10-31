@@ -4,6 +4,7 @@ module ::Jobs
     sidekiq_options retry: true, queue: 'critical'
 
     def execute(args = {})
+      puts "REVIEWARGS #{args}"
       review_title = args[:title]
       review_categories = args[:categories].split(',').map{ |x| x.to_i }
       review_featured_badge = args[:badge]
@@ -22,6 +23,7 @@ module ::Jobs
       output += most_liked_topics review_start, review_end, review_categories
       output += most_liked_posts review_start, review_end, review_categories
       output += most_replied_to_topics review_start, review_end, review_categories
+      output += featured_badge_users review_featured_badge, review_start, review_end
       opts = {
         title: "#{review_title} - #{rand(100000)}",
         raw: output,
@@ -116,6 +118,31 @@ module ::Jobs
       end
 
       output += "</table>"
+    end
+
+    def featured_badge_users(badge_name, start_date, end_date)
+      sql = <<~SQL
+      SELECT
+u.id AS user_id,
+username,
+icon,
+image,
+description
+FROM badges b
+JOIN user_badges ub
+ON ub.badge_id = b.id
+JOIN users u
+ON u.id = ub.user_id
+WHERE b.name = '#{badge_name}'
+AND ub.granted_at BETWEEN '#{start_date}' AND '#{end_date}'
+      SQL
+
+      output = "<h3>Users Granted the #{badge_name} Badge</h3>"
+      DB.query(sql).each do |row|
+        output += "<div>#{row.username}</div>"
+      end
+
+      output
     end
 
     def most_visits(start_date, end_date)
