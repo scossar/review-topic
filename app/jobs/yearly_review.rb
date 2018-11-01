@@ -1,7 +1,7 @@
 module ::Jobs
   class YearlyReview < ::Jobs::Base
 
-    sidekiq_options retry: true, queue: 'critical'
+    # sidekiq_options retry: false, queue: 'critical'
 
     def execute(args = {})
       puts "REVIEWARGS #{args}"
@@ -122,24 +122,29 @@ module ::Jobs
 
     def featured_badge_users(badge_name, start_date, end_date)
       sql = <<~SQL
-      SELECT
-u.id AS user_id,
-username,
-icon,
-image,
-description
-FROM badges b
-JOIN user_badges ub
-ON ub.badge_id = b.id
-JOIN users u
-ON u.id = ub.user_id
-WHERE b.name = '#{badge_name}'
-AND ub.granted_at BETWEEN '#{start_date}' AND '#{end_date}'
+              SELECT
+        u.id AS user_id,
+        username,
+        uploaded_avatar_id
+        FROM badges b
+        JOIN user_badges ub
+        ON ub.badge_id = b.id
+        JOIN users u
+        ON u.id = ub.user_id
+        WHERE b.name = '#{badge_name}'
+        AND ub.granted_at BETWEEN '#{start_date}' AND '#{end_date}'
       SQL
 
-      output = "<h3>Users Granted the #{badge_name} Badge</h3>"
+      badge = Badge.find_by(name: badge_name)
+      img = badge.image ? " <img src='#{badge.image}' height=20 width=20/>" : ''
+      output = "<h3>Users Granted the #{badge_name} badge#{img}</h3>"
+      output += "<p>#{badge.description}</p>" if badge.description
+
       DB.query(sql).each do |row|
-        output += "<div>#{row.username}</div>"
+        avatar_template = User.avatar_template(row.username, row.uploaded_avatar_id).gsub(/{size}/, '25')
+        avatar_image = "<img src='#{avatar_template}'class='avatar'/>"
+        userlink = "<a class='mention' href='/u/#{row.username}'>@#{row.username}</a>"
+        output += "<div>#{avatar_image} #{userlink}</div>"
       end
 
       output
@@ -209,80 +214,80 @@ AND ub.granted_at BETWEEN '#{start_date}' AND '#{end_date}'
     # todo: make sure the posts/topics being queried haven't been deleted
     def likes_in_topic_sql
       <<~SQL
-      SELECT
-      t.id,
-      NULL AS post_number,
-      t.slug AS topic_slug,
-      c.slug AS category_slug,
-      c.name AS category_name,
-      COUNT(*) AS like_count
-      FROM post_actions pa
-      JOIN posts p
-      ON p.id = pa.post_id
-      JOIN topics t
-      ON t.id = p.topic_id
-      JOIN categories c
-      ON c.id = t.category_id
-      WHERE pa.created_at BETWEEN :start_date AND :end_date
-      AND pa.post_action_type_id = 2
-      AND c.id = :cat_id
-      AND c.read_restricted = 'false'
-      AND t.deleted_at IS NULL
-      GROUP BY t.id, topic_slug, category_slug, category_name, post_number
-      ORDER BY like_count DESC
-      LIMIT 5
+        SELECT
+        t.id,
+        NULL AS post_number,
+        t.slug AS topic_slug,
+        c.slug AS category_slug,
+        c.name AS category_name,
+        COUNT(*) AS like_count
+        FROM post_actions pa
+        JOIN posts p
+        ON p.id = pa.post_id
+        JOIN topics t
+        ON t.id = p.topic_id
+        JOIN categories c
+        ON c.id = t.category_id
+        WHERE pa.created_at BETWEEN :start_date AND :end_date
+        AND pa.post_action_type_id = 2
+        AND c.id = :cat_id
+        AND c.read_restricted = 'false'
+        AND t.deleted_at IS NULL
+        GROUP BY t.id, topic_slug, category_slug, category_name, post_number
+        ORDER BY like_count DESC
+        LIMIT 5
       SQL
     end
 
     def most_liked_posts_sql
       <<~SQL
-      SELECT
-      t.id,
-      p.post_number,
-      t.slug AS topic_slug,
-      c.slug AS category_slug,
-      c.name AS category_name,
-      COUNT(*) AS like_count
-      FROM post_actions pa
-      JOIN posts p
-      ON p.id = pa.post_id
-      JOIN topics t
-      ON t.id = p.topic_id
-      JOIN categories c
-      ON c.id = t.category_id
-      WHERE pa.created_at BETWEEN :start_date AND :end_date
-      AND pa.post_action_type_id = 2
-      AND c.id = :cat_id
-      AND c.read_restricted = 'false'
-      AND p.deleted_at IS NULL
-      GROUP BY p.id, t.id, topic_slug, category_slug, category_name
-      ORDER BY like_count DESC
-      LIMIT 5
+        SELECT
+        t.id,
+        p.post_number,
+        t.slug AS topic_slug,
+        c.slug AS category_slug,
+        c.name AS category_name,
+        COUNT(*) AS like_count
+        FROM post_actions pa
+        JOIN posts p
+        ON p.id = pa.post_id
+        JOIN topics t
+        ON t.id = p.topic_id
+        JOIN categories c
+        ON c.id = t.category_id
+        WHERE pa.created_at BETWEEN :start_date AND :end_date
+        AND pa.post_action_type_id = 2
+        AND c.id = :cat_id
+        AND c.read_restricted = 'false'
+        AND p.deleted_at IS NULL
+        GROUP BY p.id, t.id, topic_slug, category_slug, category_name
+        ORDER BY like_count DESC
+        LIMIT 5
       SQL
     end
 
 
     def most_replied_to_topics_sql
       <<~SQL
-      SELECT
-      t.id,
-      NULL AS post_number,
-      t.slug AS topic_slug,
-      c.slug AS category_slug,
-      c.name AS category_name,
-      COUNT(*) AS post_count
-      FROM posts p
-      JOIN topics t
-      ON t.id = p.topic_id
-      JOIN categories c
-      ON c.id = t.category_id
-      WHERE p.created_at BETWEEN :start_date AND :end_date
-      AND c.id = :cat_id
-      AND c.read_restricted = 'false'
-      AND t.deleted_at IS NULL
-      GROUP BY p.id, t.id, topic_slug, category_slug, category_name
-      ORDER BY post_count DESC
-      LIMIT 5
+        SELECT
+        t.id,
+        NULL AS post_number,
+        t.slug AS topic_slug,
+        c.slug AS category_slug,
+        c.name AS category_name,
+        COUNT(*) AS post_count
+        FROM posts p
+        JOIN topics t
+        ON t.id = p.topic_id
+        JOIN categories c
+        ON c.id = t.category_id
+        WHERE p.created_at BETWEEN :start_date AND :end_date
+        AND c.id = :cat_id
+        AND c.read_restricted = 'false'
+        AND t.deleted_at IS NULL
+        GROUP BY p.id, t.id, topic_slug, category_slug, category_name
+        ORDER BY post_count DESC
+        LIMIT 5
       SQL
     end
 
