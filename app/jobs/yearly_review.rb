@@ -7,7 +7,7 @@ module ::Jobs
       puts "REVIEWARGS #{args}"
       review_title = args[:title]
       review_categories = args[:categories].split(',').map{ |x| x.to_i }
-      review_featured_badge = args[:badge]
+      review_featured_badge = args[:review_featured_badge]
       review_start = Date.parse(args[:review_start]).beginning_of_day
       review_end = Date.parse(args[:review_end]).end_of_day
       review_publish_category = args[:review_publish_category]
@@ -19,7 +19,6 @@ module ::Jobs
       output += most_likes_given review_start, review_end
       output += most_visits review_start, review_end
       output += '</div>'
-      # output += most_popular_topics "#{review_period}_score", review_categories
       output += most_liked_topics review_start, review_end, review_categories
       output += most_liked_posts review_start, review_end, review_categories
       output += most_replied_to_topics review_start, review_end, review_categories
@@ -136,9 +135,11 @@ module ::Jobs
       SQL
 
       badge = Badge.find_by(name: badge_name)
-      img = badge.image ? " <img src='#{badge.image}' height=20 width=20/>" : ''
+      img = badge && badge.image ? " <img src='#{badge.image}' height=20 width=20/>" : ''
+      description = badge && badge.description ? badge.description : nil
+
       output = "<h3>Users Granted the #{badge_name} badge#{img}</h3>"
-      output += "<p>#{badge.description}</p>" if badge.description
+      output += "<p>#{description}</p>" if description
 
       DB.query(sql).each do |row|
         avatar_template = User.avatar_template(row.username, row.uploaded_avatar_id).gsub(/{size}/, '25')
