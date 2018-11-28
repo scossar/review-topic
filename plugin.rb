@@ -42,7 +42,7 @@ after_initialize do
 
   YearlyReview::Engine.routes.draw do
     root to: "yearly_review#index"
-    post 'create', to: 'yearly_review#create', constraints: AdminConstraint.new
+    post 'create', to: 'yearly_review#create', constraints: StaffConstraint.new
   end
 
   Discourse::Application.routes.append do

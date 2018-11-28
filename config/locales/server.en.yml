@@ -2,6 +2,7 @@ en:
   site_settings:
     yearly_review_enabled: "Enable the yearly review."
   yearly_review:
+    report_created: "Your report is being created. You will be notified when it has been published."
     user: "User"
     topics: "Topics"
     replies: "Replies"

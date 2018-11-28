@@ -32,6 +32,7 @@ export default Ember.Component.extend({
           review_publish_category: reviewPublishCategory
         }
       }).then(() => {
+        // Todo: the message will indicate that the report is being created, will be notified by message when done.
         bootbox.alert(I18n.t('yearly_review.report_created'));
       }).catch(popupAjaxError);
     },
