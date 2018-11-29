@@ -11,6 +11,7 @@ add_admin_route 'yearly_review.title', 'yearly-review'
 
 after_initialize do
   require_dependency 'admin_constraint'
+  ::ActionController::Base.prepend_view_path File.expand_path("../app/views/yearly-review", __FILE__)
 
   module ::YearlyReview
     class Engine < ::Rails::Engine
@@ -36,6 +37,10 @@ after_initialize do
                                      review_publish_category: params[:review_publish_category],
                                      review_user: user)
 
+      # review = render_to_string :template =>  "../../discourse-yearly-review/app/views/yearly_review/yearly_review.html.erb", :layout => false
+      review = render_to_string :template =>  "yearly_review", formats: :html, layout: false
+
+      puts "YEARLYREVIEW #{review}"
       render json: { success: true }
     end
   end
