@@ -1,1 +1,6 @@
-<h1>This is the review topic</h1>
+<h3><%= t('yearly_review.topics_created') %></h3>
+<p class="test-class">
+  <% @most_topics. each do |topic| %>
+  <%= topic.username %>
+  <% end %>
+</p>

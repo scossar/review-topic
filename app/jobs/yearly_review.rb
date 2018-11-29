@@ -27,6 +27,7 @@ module ::Jobs
         raw: output,
         category: review_publish_category,
       }
+
       PostCreator.create!(review_user, opts)
 
     end
