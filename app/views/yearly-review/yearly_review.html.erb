@@ -11,7 +11,7 @@
   <% @most_topics.each do |user| %>
     <tr>
       <td>
-        <%= user.username %>
+        <%= user.username %><%= raw(avatar_template) %>
       </td>
       <td>
         <%= user.topic_count %>

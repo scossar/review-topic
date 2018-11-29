@@ -11,6 +11,7 @@ add_admin_route 'yearly_review.title', 'yearly-review'
 
 after_initialize do
   require_dependency 'admin_constraint'
+  # Look at how this is done in the site_report plugin
   ::ActionController::Base.prepend_view_path File.expand_path("../app/views/yearly-review", __FILE__)
 
   module ::YearlyReview
@@ -25,8 +26,10 @@ after_initialize do
   # ].each { |path| load File.expand_path(path, __FILE__) }
 
   require_dependency 'admin/admin_controller'
+  require_relative 'app/helpers/yearly_review_helper'
   class YearlyReview::YearlyReviewController < ::Admin::AdminController
-
+    include YearlyReviewHelper
+    add_template_helper YearlyReviewHelper
     def create
 
       review_title = params[:review_title]
