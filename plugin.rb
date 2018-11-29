@@ -27,8 +27,17 @@ after_initialize do
   require_dependency 'admin/admin_controller'
   class YearlyReview::YearlyReviewController < ::Admin::AdminController
 
-    def create()
-      user = current_user
+    def initialize(title, categories, badge, review_start, review_end, user)
+      @title = title
+      @categories = categories
+      @badge = badge
+      @review_start = review_start
+      @review_end = review_end
+      @user = user
+    end
+
+    def self.create_review()
+
       Jobs::YearlyReview.new.execute(title: params[:review_title],
                                      categories: params[:review_categories],
                                      review_featured_badge: params[:review_featured_badge],
@@ -37,12 +46,13 @@ after_initialize do
                                      review_publish_category: params[:review_publish_category],
                                      review_user: user)
 
-      # review = render_to_string :template =>  "../../discourse-yearly-review/app/views/yearly_review/yearly_review.html.erb", :layout => false
       review = render_to_string :template =>  "yearly_review", formats: :html, layout: false
 
       puts "YEARLYREVIEW #{review}"
       render json: { success: true }
     end
+
+
   end
 
   YearlyReview::Engine.routes.draw do

@@ -4,7 +4,6 @@ module ::Jobs
     # sidekiq_options retry: false, queue: 'critical'
 
     def execute(args = {})
-      puts "REVIEWARGS #{args}"
       review_title = args[:title]
       review_categories = args[:categories].split(',').map{ |x| x.to_i }
       review_featured_badge = args[:review_featured_badge]
