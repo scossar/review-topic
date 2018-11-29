@@ -72,7 +72,7 @@ module ::Jobs
         LIMIT 15
       SQL
 
-      output = "<h3>#{I18n.t('yearly_review.topics_created')}<h3><table><tr><th>#{I18n.t('yearly_review.user')}</th><th>#{I18n.t('yearly_review.topics')}</th></tr>"
+      output = "<h3>#{I18n.t('yearly_review.topics_created')}</h3><table><tr><th>#{I18n.t('yearly_review.user')}</th><th>#{I18n.t('yearly_review.topics')}</th></tr>"
 
       DB.query(sql).each do |row|
         avatar_template = User.avatar_template(row.username, row.uploaded_avatar_id).gsub(/{size}/, '25')

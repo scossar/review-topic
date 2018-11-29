@@ -1,6 +1,22 @@
 <h3><%= t('yearly_review.topics_created') %></h3>
-<p class="test-class">
-  <% @most_topics. each do |topic| %>
-  <%= topic.username %>
+<table>
+  <tr>
+    <th>
+      <%= t('yearly_review.user') %>
+    </th>
+    <th>
+      <%= t('yearly_review.topics') %>
+    </th>
+  </tr>
+  <% @most_topics.each do |user| %>
+    <tr>
+      <td>
+        <%= user.username %>
+      </td>
+      <td>
+        <%= user.topic_count %>
+      </td>
+    </tr>
   <% end %>
-</p>
+
+</table>
