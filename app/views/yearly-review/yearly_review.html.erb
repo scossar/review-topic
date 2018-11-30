@@ -32,16 +32,60 @@
     </th>
   </tr>
   <% @most_replies.each do |user| %>
-  <tr>
-    <td>
-      <%= raw(avatar_image(user.username, user.uploaded_avatar_id)) %>
-      <%= raw(user_link(user.username)) %>
-    </td>
-    <td>
-      <%= user.reply_count %>
-    </td>
-  </tr>
+    <tr>
+      <td>
+        <%= raw(avatar_image(user.username, user.uploaded_avatar_id)) %>
+        <%= raw(user_link(user.username)) %>
+      </td>
+      <td>
+        <%= user.reply_count %>
+      </td>
+    </tr>
   <% end %>
 </table>
 
+<h3><%= t('yearly_review.most_likes_given') %></h3>
+<table>
+  <tr>
+    <th>
+      <%= t('yearly_review.user') %>
+    </th>
+    <th>
+      <%= t('yearly_review.likes_given') %>
+    </th>
+  </tr>
+  <% @most_likes.each do |user| %>
+    <tr>
+      <td>
+        <%= raw(avatar_image(user.username, user.uploaded_avatar_id)) %>
+        <%= raw(user_link(user.username)) %>
+      </td>
+      <td>
+        <%= user.likes_given_count %>
+      </td>
+    </tr>
+  <% end %>
+</table>
 
+<h3><%= t('yearly_review.most_visits') %></h3>
+<table>
+  <tr>
+    <th>
+      <%= t('yearly_review.user') %>
+    </th>
+    <th>
+      <%= t('yearly_review.visits') %>
+    </th>
+  </tr>
+  <% @most_visits.each do |user| %>
+    <tr>
+      <td>
+        <%= raw(avatar_image(user.username, user.uploaded_avatar_id)) %>
+        <%= raw(user_link(user.username)) %>
+      </td>
+      <td>
+        <%= user.visit_count %>
+      </td>
+    </tr>
+  <% end %>
+</table>

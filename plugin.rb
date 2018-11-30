@@ -36,19 +36,16 @@ after_initialize do
       review_categories = params[:review_categories].split(',').map{ |x| x.to_i }
       review_featured_badge = params[:review_featured_badge]
       review_start = Date.parse(params[:review_start]).beginning_of_day
-      review_end = Date.parse(params[:review_end]).end_of_day
+      # todo: remove the + 1.day
+      review_end = (Date.parse(params[:review_end]) + 1.day).end_of_day
       review_publish_category = params[:review_publish_category]
       review_user = current_user
 
       @most_topics = most_topics review_categories, review_start, review_end
       @most_replies = most_replies review_categories, review_start, review_end
+      @most_likes = most_likes_given review_start, review_end
+      @most_visits = most_visits review_start, review_end
 
-      # output = "<div data-review='review-topic'><h2>Top Users</h2>"
-      # output += most_topics review_categories, review_start, review_end
-      # output += most_replies review_categories, review_start, review_end
-      # output += most_likes_given review_start, review_end
-      # output += most_visits review_start, review_end
-      # output += '</div>'
       # output += most_liked_topics review_start, review_end, review_categories
       # output += most_liked_posts review_start, review_end, review_categories
       # output += most_replied_to_topics review_start, review_end, review_categories
@@ -167,47 +164,30 @@ after_initialize do
         LIMIT 15
       SQL
 
-      output = "<h3>#{I18n.t('yearly_review.most_visits')}<h3><table><tr><th>#{I18n.t('yearly_review.user')}</th><th>#{I18n.t('yearly_review.visits')}</th></tr>"
-
-      DB.query(sql).each do |row|
-        avatar_template = User.avatar_template(row.username, row.uploaded_avatar_id).gsub(/{size}/, '25')
-        avatar_image = "<img src='#{avatar_template}'class='avatar'/>"
-        userlink = "<a class='mention' href='/u/#{row.username}'>@#{row.username}</a>"
-        output += "<tr><td>#{avatar_image} #{userlink} </td><td>#{row.visit_count}</td></tr>"
-      end
-
-      output += "</table>"
+      DB.query(sql)
     end
 
     def most_likes_given(start_date, end_date)
+      # todo: filter by category
       sql = <<~SQL
         SELECT
-        ua.user_id,
+        ua.acting_user_id,
         u.username,
         u.uploaded_avatar_id,
         COUNT(ua.user_id) AS likes_given_count
         FROM user_actions ua
         JOIN users u
-        ON u.id = ua.user_id
+        ON u.id = ua.acting_user_id
         WHERE u.id > 0
         AND ua.created_at >= '#{start_date}'
         AND ua.created_at <= '#{end_date}'
         AND ua.action_type = 2
-        GROUP BY ua.user_id, u.username, u.uploaded_avatar_id
+        GROUP BY ua.acting_user_id, u.username, u.uploaded_avatar_id
         ORDER BY likes_given_count DESC
         LIMIT 15
       SQL
 
-      output = "<h3>#{I18n.t('yearly_review.most_likes_given')}<h3><table><tr><th>#{I18n.t('yearly_review.user')}</th><th>#{I18n.t('yearly_review.likes_given')}</th></tr>"
-
-      DB.query(sql).each do |row|
-        avatar_template = User.avatar_template(row.username, row.uploaded_avatar_id).gsub(/{size}/, '25')
-        avatar_image = "<img src='#{avatar_template}'class='avatar'/>"
-        userlink = "<a class='mention' href='/u/#{row.username}'>@#{row.username}</a>"
-        output += "<tr><td>#{avatar_image} #{userlink} </td><td>#{row.likes_given_count}</td></tr>"
-      end
-
-      output += "</table>"
+      DB.query(sql)
     end
 
     # todo: make sure the posts/topics being queried haven't been deleted
