@@ -45,6 +45,8 @@ after_initialize do
       @most_replies = most_replies review_categories, review_start, review_end
       @most_likes = most_likes_given review_start, review_end
       @most_visits = most_visits review_start, review_end
+      @most_liked_topics = most_liked_topics review_categories, review_start, review_end
+      puts "MOSTLIKED #{@most_liked_topics}"
 
       # output += most_liked_topics review_start, review_end, review_categories
       # output += most_liked_posts review_start, review_end, review_categories
@@ -147,6 +149,7 @@ after_initialize do
     end
 
     def most_visits(start_date, end_date)
+      # todo: add category filter
       sql = <<~SQL
         SELECT
         uv.user_id,
@@ -270,7 +273,7 @@ after_initialize do
       SQL
     end
 
-    def most_liked_topics start_date, end_date, cat_ids
+    def most_liked_topics cat_ids, start_date, end_date
       category_topics('most_liked_topics', start_date, end_date, cat_ids, likes_in_topic_sql)
     end
 
@@ -284,18 +287,21 @@ after_initialize do
 
 
     def category_topics(title_key, start_date, end_date, category_ids, sql)
-      output = "<h3>#{I18n.t('yearly_review.' + title_key)}</h3>\r\r"
+      # output = "<h3>#{I18n.t('yearly_review.' + title_key)}</h3>\r\r"
+      data = []
       category_ids.each do |cat_id|
-        DB.query(sql, start_date: start_date, end_date: end_date, cat_id: cat_id).each_with_index do |row, i|
-          p row
-          output += "<a class='hashtag' href='/c/#{row.category_slug}'><h4>##{row.category_name}</h4></a>\r\r" if i == 0
-          url = "#{Discourse.base_url}/t/#{row.topic_slug}/#{row.id}"
-          url += "/#{row.post_number}" if row.post_number
-          output += "#{url} \r\r"
+        cat_data = []
+        DB.query(sql, start_date: start_date, end_date: end_date, cat_id: cat_id).each do |row|
+          cat_data << row
+          # output += "<a class='hashtag' href='/c/#{row.category_slug}'><h4>##{row.category_name}</h4></a>\r\r" if i == 0
+          # url = "#{Discourse.base_url}/t/#{row.topic_slug}/#{row.id}"
+          # url += "/#{row.post_number}" if row.post_number
+          # output += "#{url} \r\r"
         end
+        data << cat_data
       end
-
-      output
+      puts "CATTOPICS DATA #{data}"
+      data
     end
 
   end
@@ -306,6 +312,6 @@ after_initialize do
   end
 
   Discourse::Application.routes.append do
-    mount ::YearlyReview::Engine, at: '/admin/plugins/yearly-review', constraints: AdminConstraint.new
+    mount ::YearlyReview::Engine, at: '/admin/plugins/yearly-review', constraints: StaffConstraint.new
   end
 end
