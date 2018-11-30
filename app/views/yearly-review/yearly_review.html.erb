@@ -11,12 +11,37 @@
   <% @most_topics.each do |user| %>
     <tr>
       <td>
-        <%= user.username %><%= raw(avatar_template) %>
+        <%= raw(avatar_image(user.username, user.uploaded_avatar_id)) %>
+        <%= raw(user_link(user.username)) %>
       </td>
       <td>
         <%= user.topic_count %>
       </td>
     </tr>
   <% end %>
-
 </table>
+
+<h3><%= t('yearly_review.replies_created') %></h3>
+<table>
+  <tr>
+    <th>
+      <%= t('yearly_review.user') %>
+    </th>
+    <th>
+      <%= t('yearly_review.replies') %>
+    </th>
+  </tr>
+  <% @most_replies.each do |user| %>
+  <tr>
+    <td>
+      <%= raw(avatar_image(user.username, user.uploaded_avatar_id)) %>
+      <%= raw(user_link(user.username)) %>
+    </td>
+    <td>
+      <%= user.reply_count %>
+    </td>
+  </tr>
+  <% end %>
+</table>
+
+

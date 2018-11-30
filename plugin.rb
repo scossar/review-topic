@@ -41,6 +41,7 @@ after_initialize do
       review_user = current_user
 
       @most_topics = most_topics review_categories, review_start, review_end
+      @most_replies = most_replies review_categories, review_start, review_end
 
       # output = "<div data-review='review-topic'><h2>Top Users</h2>"
       # output += most_topics review_categories, review_start, review_end
@@ -87,17 +88,7 @@ after_initialize do
         LIMIT 15
       SQL
 
-      return DB.query(sql)
-
-      # output = "<h3>#{I18n.t('yearly_review.topics_created')}<h3><table><tr><th>#{I18n.t('yearly_review.user')}</th><th>#{I18n.t('yearly_review.topics')}</th></tr>"
-      # DB.query(sql).each do |row|
-      #   avatar_template = User.avatar_template(row.username, row.uploaded_avatar_id).gsub(/{size}/, '25')
-      #   avatar_image = "<img src='#{avatar_template}'class='avatar'/>"
-      #   userlink = "<a class='mention' href='/u/#{row.username}'>@#{row.username}</a>"
-      #   output += "<tr><td>#{avatar_image} #{userlink}</td><td>#{row.topic_count}</td></tr>"
-      # end
-      #
-      # output += "</table>"
+      DB.query(sql)
     end
 
     def most_replies(categories, start_date, end_date)
@@ -123,16 +114,7 @@ after_initialize do
         LIMIT 15
       SQL
 
-      output = "<h3>#{I18n.t('yearly_review.replies_created')}<h3><table><tr><th>#{I18n.t('yearly_review.user')}</th><th>#{I18n.t('yearly_review.replies')}</th></tr>"
-
-      DB.query(sql).each do |row|
-        avatar_template = User.avatar_template(row.username, row.uploaded_avatar_id).gsub(/{size}/, '25')
-        avatar_image = "<img src='#{avatar_template}'class='avatar'/>"
-        userlink = "<a class='mention' href='/u/#{row.username}'>@#{row.username}</a>"
-        output += "<tr><td>#{avatar_image} #{userlink} </td><td>#{row.reply_count}</td></tr>"
-      end
-
-      output += "</table>"
+      DB.query(sql)
     end
 
     def featured_badge_users(badge_name, start_date, end_date)
