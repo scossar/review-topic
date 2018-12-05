@@ -198,11 +198,11 @@ after_initialize do
       <<~SQL
         SELECT
         t.id,
-        NULL AS post_number,
         t.slug AS topic_slug,
         t.title,
         c.slug AS category_slug,
         c.name AS category_name,
+        c.id AS category_id,
         COUNT(*) AS like_count
         FROM post_actions pa
         JOIN posts p
@@ -216,7 +216,7 @@ after_initialize do
         AND c.id = :cat_id
         AND c.read_restricted = 'false'
         AND t.deleted_at IS NULL
-        GROUP BY t.id, topic_slug, category_slug, category_name, post_number
+        GROUP BY t.id, category_slug, category_name, c.id
         ORDER BY like_count DESC
         LIMIT 5
       SQL
@@ -298,7 +298,6 @@ after_initialize do
 
         data << cat_data unless cat_data.empty?
       end
-      puts "CATTOPICS DATA #{data}"
       data
     end
 
