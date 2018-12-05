@@ -8,14 +8,14 @@ module YearlyReviewHelper
     "<a class='mention' href='/u/#{username}'>@#{username}</a>"
   end
 
+  # todo: remove if not used
   def category_link_title(slug, id, name)
     "<a class='hashtag' href='/c/#{slug}/#{id}'><h4>##{name}</h4></a> \r\r"
   end
 
-  def topic_link(slug, topic_id, post_number = nil)
-    url = "#{Discourse.base_url}/t/#{slug}/#{topic_id}"
+  def topic_link(slug, title, topic_id, post_number = nil)
+    url = " #{Discourse.base_url}/t/#{slug}/#{topic_id}"
     url += "/#{post_number}" if post_number
-    "#{url} \r\r"
+    "<a href='#{url}' class='inline-onebox'>#{title}</a>"
   end
-
 end

@@ -200,6 +200,7 @@ after_initialize do
         t.id,
         NULL AS post_number,
         t.slug AS topic_slug,
+        t.title,
         c.slug AS category_slug,
         c.name AS category_name,
         COUNT(*) AS like_count
@@ -227,6 +228,7 @@ after_initialize do
         t.id,
         p.post_number,
         t.slug AS topic_slug,
+        t.title,
         c.slug AS category_slug,
         c.name AS category_name,
         COUNT(*) AS like_count
@@ -274,31 +276,27 @@ after_initialize do
     end
 
     def most_liked_topics cat_ids, start_date, end_date
-      category_topics('most_liked_topics', start_date, end_date, cat_ids, likes_in_topic_sql)
+      category_topics(start_date, end_date, cat_ids, likes_in_topic_sql)
     end
 
     def most_liked_posts start_date, end_date, cat_ids
-      category_topics( 'most_liked_posts', start_date, end_date, cat_ids, most_liked_posts_sql)
+      category_topics( start_date, end_date, cat_ids, most_liked_posts_sql)
     end
 
     def most_replied_to_topics start_date, end_date, cat_ids
-      category_topics('most_replied_to_topics', start_date, end_date, cat_ids, most_replied_to_topics_sql)
+      category_topics(start_date, end_date, cat_ids, most_replied_to_topics_sql)
     end
 
 
-    def category_topics(title_key, start_date, end_date, category_ids, sql)
-      # output = "<h3>#{I18n.t('yearly_review.' + title_key)}</h3>\r\r"
+    def category_topics(start_date, end_date, category_ids, sql)
       data = []
       category_ids.each do |cat_id|
         cat_data = []
         DB.query(sql, start_date: start_date, end_date: end_date, cat_id: cat_id).each do |row|
           cat_data << row
-          # output += "<a class='hashtag' href='/c/#{row.category_slug}'><h4>##{row.category_name}</h4></a>\r\r" if i == 0
-          # url = "#{Discourse.base_url}/t/#{row.topic_slug}/#{row.id}"
-          # url += "/#{row.post_number}" if row.post_number
-          # output += "#{url} \r\r"
         end
-        data << cat_data
+
+        data << cat_data unless cat_data.empty?
       end
       puts "CATTOPICS DATA #{data}"
       data

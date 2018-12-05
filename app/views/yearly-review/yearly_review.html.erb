@@ -95,4 +95,14 @@
 
 <h3><%= t('yearly_review.most_liked_topics') %></h3>
 
-<% @most_liked_topics.each do |category_topics| %><% category_topics.each_with_index  do |topic, i| %><% if i == 0 %><%= raw(category_link_title(topic.topic_slug, topic.id, topic.category_name )) %><% end %><%= raw(topic_link(topic.topic_slug, topic.id)) %><% end %><% end %>
+<% @most_liked_topics.each do |category_topics| %>
+  <table>
+  <% category_topics.each  do |topic| %>
+    <tr>
+      <td>
+        <%= raw(topic_link(topic.topic_slug, topic.title, topic.id)) %>
+      </td>
+    </tr>
+    <% end %>
+  </table>
+<% end %>
