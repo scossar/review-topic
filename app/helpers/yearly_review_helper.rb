@@ -16,6 +16,7 @@ module YearlyReviewHelper
   def topic_link(slug, title, topic_id, post_number = nil)
     url = " #{Discourse.base_url}/t/#{slug}/#{topic_id}"
     url += "/#{post_number}" if post_number
+    title += "(#{post_number})" if post_number
     "<a href='#{url}' class='inline-onebox'>#{title}</a>"
   end
 end

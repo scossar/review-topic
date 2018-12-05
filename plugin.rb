@@ -46,6 +46,7 @@ after_initialize do
       @most_likes = most_likes_given review_start, review_end
       @most_visits = most_visits review_start, review_end
       @most_liked_topics = most_liked_topics review_categories, review_start, review_end
+      @most_liked_posts = most_liked_posts review_categories, review_start, review_end
       puts "MOSTLIKED #{@most_liked_topics}"
 
       # output += most_liked_topics review_start, review_end, review_categories
@@ -231,6 +232,7 @@ after_initialize do
         t.title,
         c.slug AS category_slug,
         c.name AS category_name,
+        c.id AS category_id,
         COUNT(*) AS like_count
         FROM post_actions pa
         JOIN posts p
@@ -244,7 +246,7 @@ after_initialize do
         AND c.id = :cat_id
         AND c.read_restricted = 'false'
         AND p.deleted_at IS NULL
-        GROUP BY p.id, t.id, topic_slug, category_slug, category_name
+        GROUP BY p.post_number, t.id, topic_slug, category_slug, category_name, c.id
         ORDER BY like_count DESC
         LIMIT 5
       SQL
@@ -279,11 +281,11 @@ after_initialize do
       category_topics(start_date, end_date, cat_ids, likes_in_topic_sql)
     end
 
-    def most_liked_posts start_date, end_date, cat_ids
+    def most_liked_posts cat_ids, start_date, end_date
       category_topics( start_date, end_date, cat_ids, most_liked_posts_sql)
     end
 
-    def most_replied_to_topics start_date, end_date, cat_ids
+    def most_replied_to_topics cat_ids, start_date, end_date
       category_topics(start_date, end_date, cat_ids, most_replied_to_topics_sql)
     end
 
