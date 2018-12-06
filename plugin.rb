@@ -48,10 +48,15 @@ after_initialize do
       @most_liked_topics = most_liked_topics review_categories, review_start, review_end
       @most_liked_posts = most_liked_posts review_categories, review_start, review_end
       @most_replied_to_topics = most_replied_to_topics review_categories, review_start, review_end
+      @user_stats = [
+        {title_key: 'topics_created', users: @most_topics},
+        {title_key: 'replies_created', users: @most_replies},
+        {title_key: 'likes_given', users: @most_likes},
+      ]
       @category_topics_arr = [
         {title_key: 'most_liked_topics', topics: @most_liked_topics},
         {title_key: 'most_liked_posts', topics: @most_liked_posts},
-        {title_key: 'most_replied_to_topics', topics: @most_replied_to_topics}
+        # {title_key: 'most_replied_to_topics', topics: @most_replied_to_topics}
       ]
 
       # output += most_liked_topics review_start, review_end, review_categories
@@ -73,11 +78,13 @@ after_initialize do
       render json: {success: true}
     end
 
+    # User queries
+
     def most_topics(categories, start_date, end_date)
       sql = <<~SQL
         SELECT
         t.user_id,
-        COUNT(t.user_id) AS topic_count,
+        COUNT(t.user_id) AS action_count,
         u.username,
         u.uploaded_avatar_id
         FROM topics t
@@ -89,7 +96,7 @@ after_initialize do
         AND t.created_at <= '#{end_date}'
         AND t.category_id IN (#{categories.join(',')})
         GROUP BY t.user_id, u.username, u.uploaded_avatar_id
-        ORDER BY topic_count DESC
+        ORDER BY action_count DESC
         LIMIT 15
       SQL
 
@@ -102,7 +109,7 @@ after_initialize do
         p.user_id,
         u.username,
         u.uploaded_avatar_id,
-        COUNT(p.user_id) AS reply_count
+        COUNT(p.user_id) AS action_count
         FROM posts p
         JOIN users u
         ON u.id = p.user_id
@@ -115,7 +122,7 @@ after_initialize do
         AND p.created_at <= '#{end_date}'
         AND t.category_id IN (#{categories.join(',')})
         GROUP BY p.user_id, u.username, u.uploaded_avatar_id
-        ORDER BY reply_count DESC
+        ORDER BY action_count DESC
         LIMIT 15
       SQL
 
@@ -161,7 +168,7 @@ after_initialize do
         uv.user_id,
         u.username,
         u.uploaded_avatar_id,
-        COUNT(uv.user_id) AS visit_count
+        COUNT(uv.user_id) AS action_count
         FROM user_visits uv
         JOIN users u
         ON u.id = uv.user_id
@@ -169,7 +176,7 @@ after_initialize do
         AND uv.visited_at >= '#{start_date}'
         AND uv.visited_at <= '#{end_date}'
         GROUP BY uv.user_id, u.username, u.uploaded_avatar_id
-        ORDER BY visit_count DESC
+        ORDER BY action_count DESC
         LIMIT 15
       SQL
 
@@ -183,7 +190,7 @@ after_initialize do
         ua.acting_user_id,
         u.username,
         u.uploaded_avatar_id,
-        COUNT(ua.user_id) AS likes_given_count
+        COUNT(ua.user_id) AS action_count
         FROM user_actions ua
         JOIN users u
         ON u.id = ua.acting_user_id
@@ -192,7 +199,7 @@ after_initialize do
         AND ua.created_at <= '#{end_date}'
         AND ua.action_type = 2
         GROUP BY ua.acting_user_id, u.username, u.uploaded_avatar_id
-        ORDER BY likes_given_count DESC
+        ORDER BY action_count DESC
         LIMIT 15
       SQL
 
