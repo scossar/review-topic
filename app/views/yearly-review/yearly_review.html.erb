@@ -1,102 +1,103 @@
 <!-- The following tables can be grouped -->
 <div data-review-topic="true">
-<h3><%= t('yearly_review.topics_created') %></h3>
-<table>
-  <tr>
-    <th>
-      <%= t('yearly_review.user') %>
-    </th>
-    <th>
-      <%= t('yearly_review.topics') %>
-    </th>
-  </tr>
-  <% @most_topics.each do |user| %>
+  <h3><%= t('yearly_review.topics_created') %></h3>
+  <table>
     <tr>
-      <td>
-        <%= raw(avatar_image(user.username, user.uploaded_avatar_id)) %>
-        <%= raw(user_link(user.username)) %>
-      </td>
-      <td>
-        <%= user.topic_count %>
-      </td>
+      <th>
+        <%= t('yearly_review.user') %>
+      </th>
+      <th>
+        <%= t('yearly_review.topics') %>
+      </th>
     </tr>
-  <% end %>
-</table>
+    <% @most_topics.each do |user| %>
+      <tr>
+        <td>
+          <%= raw(avatar_image(user.username, user.uploaded_avatar_id)) %>
+          <%= raw(user_link(user.username)) %>
+        </td>
+        <td>
+          <%= user.topic_count %>
+        </td>
+      </tr>
+    <% end %>
+  </table>
 
-<h3><%= t('yearly_review.replies_created') %></h3>
-<table>
-  <tr>
-    <th>
-      <%= t('yearly_review.user') %>
-    </th>
-    <th>
-      <%= t('yearly_review.replies') %>
-    </th>
-  </tr>
-  <% @most_replies.each do |user| %>
+  <h3><%= t('yearly_review.replies_created') %></h3>
+  <table>
     <tr>
-      <td>
-        <%= raw(avatar_image(user.username, user.uploaded_avatar_id)) %>
-        <%= raw(user_link(user.username)) %>
-      </td>
-      <td>
-        <%= user.reply_count %>
-      </td>
+      <th>
+        <%= t('yearly_review.user') %>
+      </th>
+      <th>
+        <%= t('yearly_review.replies') %>
+      </th>
     </tr>
-  <% end %>
-</table>
+    <% @most_replies.each do |user| %>
+      <tr>
+        <td>
+          <%= raw(avatar_image(user.username, user.uploaded_avatar_id)) %>
+          <%= raw(user_link(user.username)) %>
+        </td>
+        <td>
+          <%= user.reply_count %>
+        </td>
+      </tr>
+    <% end %>
+  </table>
 
-<h3><%= t('yearly_review.most_likes_given') %></h3>
-<table>
-  <tr>
-    <th>
-      <%= t('yearly_review.user') %>
-    </th>
-    <th>
-      <%= t('yearly_review.likes_given') %>
-    </th>
-  </tr>
-  <% @most_likes.each do |user| %>
+  <h3><%= t('yearly_review.most_likes_given') %></h3>
+  <table>
     <tr>
-      <td>
-        <%= raw(avatar_image(user.username, user.uploaded_avatar_id)) %>
-        <%= raw(user_link(user.username)) %>
-      </td>
-      <td>
-        <%= user.likes_given_count %>
-      </td>
+      <th>
+        <%= t('yearly_review.user') %>
+      </th>
+      <th>
+        <%= t('yearly_review.likes_given') %>
+      </th>
     </tr>
-  <% end %>
-</table>
+    <% @most_likes.each do |user| %>
+      <tr>
+        <td>
+          <%= raw(avatar_image(user.username, user.uploaded_avatar_id)) %>
+          <%= raw(user_link(user.username)) %>
+        </td>
+        <td>
+          <%= user.likes_given_count %>
+        </td>
+      </tr>
+    <% end %>
+  </table>
 
-<h3><%= t('yearly_review.most_visits') %></h3>
-<table>
-  <tr>
-    <th>
-      <%= t('yearly_review.user') %>
-    </th>
-    <th>
-      <%= t('yearly_review.visits') %>
-    </th>
-  </tr>
-  <% @most_visits.each do |user| %>
+  <h3><%= t('yearly_review.most_visits') %></h3>
+  <table>
     <tr>
-      <td>
-        <%= raw(avatar_image(user.username, user.uploaded_avatar_id)) %>
-        <%= raw(user_link(user.username)) %>
-      </td>
-      <td>
-        <%= user.visit_count %>
-      </td>
+      <th>
+        <%= t('yearly_review.user') %>
+      </th>
+      <th>
+        <%= t('yearly_review.visits') %>
+      </th>
     </tr>
-  <% end %>
-</table>
-<!-- end of table group -->
-
-<h3><%= t('yearly_review.most_liked_topics') %></h3>
-<!-- fix the way the category_link_title is being called -->
-<% @most_liked_topics.each do |category_topics| %>
-  <h4><%= raw(category_link_title(category_topics[0].category_slug, category_topics[0].category_slug, category_topics[0].category_name)) %></h4>
+    <% @most_visits.each do |user| %>
+      <tr>
+        <td>
+          <%= raw(avatar_image(user.username, user.uploaded_avatar_id)) %>
+          <%= raw(user_link(user.username)) %>
+        </td>
+        <td>
+          <%= user.visit_count %>
+        </td>
+      </tr>
+    <% end %>
+  </table>
+  <!-- end of table group -->
+<% @category_topics_arr.each do |obj| %>
+  <h3><%= t("yearly_review.#{obj[:title_key]}") %></h3>
+  <h4>
+    <%= raw(category_link_title(obj[:topics][0][0].category_id, obj[:topics][0][0].category_slug, obj[:topics][0][0].category_name)) %>
+  </h4>
+  <% obj[:topics].each do |category_topics| %>
   <table>
     <tr>
       <th>
@@ -106,44 +107,18 @@
         Like Count
       </th>
     </tr>
-  <% category_topics.each  do |topic| %>
-    <tr>
-      <td>
-        <%= raw(topic_link(topic.topic_slug, topic.title, topic.id)) %>
-      </td>
-      <td>
-        <%= topic.like_count %>
-      </td>
-    </tr>
+    <% category_topics.each do |topic| %>
+      <tr>
+        <td>
+          <%= raw(topic_link(topic.topic_slug, topic.title, topic.id, topic.post_number)) %>
+        </td>
+        <td>
+          <%= topic.like_count %>
+        </td>
+      </tr>
     <% end %>
   </table>
   <br>
-<% end %>
-
-  <h3><%= t('yearly_review.most_liked_posts') %></h3>
-  <!-- fix the way the category_link_title is being called -->
-  <% @most_liked_posts.each do |category_posts| %>
-    <h4><%= raw(category_link_title(category_posts[0].category_slug, category_posts[0].category_slug, category_posts[0].category_name)) %></h4>
-    <table>
-      <tr>
-        <th>
-          Post
-        </th>
-        <th>
-          Like Count
-        </th>
-      </tr>
-      <% category_posts.each  do |topic| %>
-        <tr>
-          <td>
-            <%= raw(topic_link(topic.topic_slug, topic.title, topic.id, topic.post_number)) %>
-          </td>
-          <td>
-            <%= topic.like_count %>
-          </td>
-        </tr>
-      <% end %>
-    </table>
-    <br>
   <% end %>
+<% end %>
 </div>

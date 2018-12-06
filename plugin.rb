@@ -47,7 +47,12 @@ after_initialize do
       @most_visits = most_visits review_start, review_end
       @most_liked_topics = most_liked_topics review_categories, review_start, review_end
       @most_liked_posts = most_liked_posts review_categories, review_start, review_end
-      puts "MOSTLIKED #{@most_liked_topics}"
+      @category_topics_arr = [
+        {title_key: 'most_liked_topics', topics: @most_liked_topics},
+        {title_key: 'most_liked_posts', topics: @most_liked_posts}
+      ]
+
+      puts "CATTOPICSARR #{@category_topics_arr}"
 
       # output += most_liked_topics review_start, review_end, review_categories
       # output += most_liked_posts review_start, review_end, review_categories
@@ -204,6 +209,7 @@ after_initialize do
         c.slug AS category_slug,
         c.name AS category_name,
         c.id AS category_id,
+        NULL AS post_number,
         COUNT(*) AS like_count
         FROM post_actions pa
         JOIN posts p
@@ -217,7 +223,7 @@ after_initialize do
         AND c.id = :cat_id
         AND c.read_restricted = 'false'
         AND t.deleted_at IS NULL
-        GROUP BY t.id, category_slug, category_name, c.id
+        GROUP BY t.id, category_slug, category_name, c.id, post_number
         ORDER BY like_count DESC
         LIMIT 5
       SQL
@@ -278,19 +284,19 @@ after_initialize do
     end
 
     def most_liked_topics cat_ids, start_date, end_date
-      category_topics(start_date, end_date, cat_ids, likes_in_topic_sql)
+      category_topics('most_liked_topics',start_date, end_date, cat_ids, likes_in_topic_sql)
     end
 
     def most_liked_posts cat_ids, start_date, end_date
-      category_topics( start_date, end_date, cat_ids, most_liked_posts_sql)
+      category_topics( 'most_liked_posts', start_date, end_date, cat_ids, most_liked_posts_sql)
     end
 
     def most_replied_to_topics cat_ids, start_date, end_date
-      category_topics(start_date, end_date, cat_ids, most_replied_to_topics_sql)
+      category_topics('most_replied_to_topics', start_date, end_date, cat_ids, most_replied_to_topics_sql)
     end
 
 
-    def category_topics(start_date, end_date, category_ids, sql)
+    def category_topics(title_key, start_date, end_date, category_ids, sql)
       data = []
       category_ids.each do |cat_id|
         cat_data = []
