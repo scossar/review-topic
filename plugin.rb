@@ -47,12 +47,12 @@ after_initialize do
       @most_visits = most_visits review_start, review_end
       @most_liked_topics = most_liked_topics review_categories, review_start, review_end
       @most_liked_posts = most_liked_posts review_categories, review_start, review_end
+      @most_replied_to_topics = most_replied_to_topics review_categories, review_start, review_end
       @category_topics_arr = [
         {title_key: 'most_liked_topics', topics: @most_liked_topics},
-        {title_key: 'most_liked_posts', topics: @most_liked_posts}
+        {title_key: 'most_liked_posts', topics: @most_liked_posts},
+        {title_key: 'most_replied_to_topics', topics: @most_replied_to_topics}
       ]
-
-      puts "CATTOPICSARR #{@category_topics_arr}"
 
       # output += most_liked_topics review_start, review_end, review_categories
       # output += most_liked_posts review_start, review_end, review_categories
@@ -267,6 +267,7 @@ after_initialize do
         t.slug AS topic_slug,
         c.slug AS category_slug,
         c.name AS category_name,
+        c.id AS category_id,
         COUNT(*) AS post_count
         FROM posts p
         JOIN topics t
@@ -277,7 +278,7 @@ after_initialize do
         AND c.id = :cat_id
         AND c.read_restricted = 'false'
         AND t.deleted_at IS NULL
-        GROUP BY p.id, t.id, topic_slug, category_slug, category_name
+        GROUP BY p.id, t.id, topic_slug, category_slug, category_name, c.id
         ORDER BY post_count DESC
         LIMIT 5
       SQL
