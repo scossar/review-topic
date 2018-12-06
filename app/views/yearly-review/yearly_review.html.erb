@@ -2,14 +2,14 @@
 <div data-review-topic="true">
 <% @user_stats.each do |obj| %>
   <% if obj[:users] %>
-  <h3><%= t("yearly_review.#{obj[:title_key]}") %></h3>
+  <h3><%= t("yearly_review.title.#{obj[:key]}") %></h3>
   <table>
     <tr>
       <th>
         <%= t('yearly_review.user') %>
       </th>
       <th>
-        <%= t('yearly_review.replies') %>
+        <%= t("yearly_review.action.#{obj[:key]}") %>
       </th>
     </tr>
   <% obj[:users].each do |user| %>

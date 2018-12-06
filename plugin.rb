@@ -49,9 +49,9 @@ after_initialize do
       @most_liked_posts = most_liked_posts review_categories, review_start, review_end
       @most_replied_to_topics = most_replied_to_topics review_categories, review_start, review_end
       @user_stats = [
-        {title_key: 'topics_created', users: @most_topics},
-        {title_key: 'replies_created', users: @most_replies},
-        {title_key: 'likes_given', users: @most_likes},
+        {key: 'topics_created', users: @most_topics},
+        {key: 'replies_created', users: @most_replies},
+        {key: 'likes_given', users: @most_likes},
       ]
       @category_topics_arr = [
         {title_key: 'most_liked_topics', topics: @most_liked_topics},

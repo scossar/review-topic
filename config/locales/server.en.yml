@@ -2,14 +2,20 @@ en:
   site_settings:
     yearly_review_enabled: "Enable the yearly review."
   yearly_review:
+    title:
+      likes_given: "Likes Given"
+      topics_created: "Topics Created"
+      replies_created: "Replies Created"
+    action:
+      replies: "Replies"
+      topics: "Topics"
+      visits: "Visits"
     report_created: "Your report is being created. You will be notified when it has been published."
     user: "User"
     topics: "Topics"
     replies: "Replies"
     visits: "Visits"
-    likes_given: "Likes Given"
-    topics_created: "Topics Created"
-    replies_created: "Replies Created"
+
     most_visits: "Most Visits"
     most_likes_given: "Most Likes Given"
     most_popular_topics: "Most Popular Topics"
