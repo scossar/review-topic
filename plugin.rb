@@ -54,8 +54,8 @@ after_initialize do
         {key: 'likes_given', users: @most_likes},
       ]
       @category_topics_arr = [
-        {title_key: 'most_liked_topics', topics: @most_liked_topics},
-        {title_key: 'most_liked_posts', topics: @most_liked_posts},
+        {key: 'most_liked_topics', topics: @most_liked_topics},
+        {key: 'most_liked_posts', topics: @most_liked_posts},
         # {title_key: 'most_replied_to_topics', topics: @most_replied_to_topics}
       ]
 

@@ -28,7 +28,7 @@
 <% end %>
 
 <% @category_topics_arr.each do |obj| %>
-  <h3><%= t("yearly_review.#{obj[:title_key]}") %></h3>
+  <h3><%= t("yearly_review.#{obj[:key]}.title") %></h3>
   <h4>
     <%= raw(category_link_title(obj[:topics][0][0].category_id, obj[:topics][0][0].category_slug, obj[:topics][0][0].category_name)) %>
   </h4>
@@ -36,10 +36,10 @@
   <table>
     <tr>
       <th>
-        Topic
+        <%= t("yearly_review.#{obj[:key]}.type") %>
       </th>
       <th>
-        Like Count
+        <%= t("yearly_review.#{obj[:key]}.action") %>
       </th>
     </tr>
     <% category_topics.each do |topic| %>
