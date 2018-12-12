@@ -214,8 +214,9 @@ after_initialize do
     end
 
     # todo: make sure the posts/topics being queried haven't been deleted
+    # todo: Remove `NULL AS post_number`
     def likes_in_topic_sql
-      # todo: sort out likesc count
+      # todo: sort out likes count
       <<~SQL
         SELECT
         t.id,
@@ -238,7 +239,7 @@ after_initialize do
         AND c.id = :cat_id
         AND c.read_restricted = 'false'
         AND t.deleted_at IS NULL
-        GROUP BY t.id, category_slug, category_name, c.id, post_number
+        GROUP BY t.id, category_slug, category_name, c.id
         ORDER BY action_count DESC
         LIMIT 5
       SQL
@@ -267,7 +268,7 @@ after_initialize do
         AND c.id = :cat_id
         AND c.read_restricted = 'false'
         AND p.deleted_at IS NULL
-        GROUP BY p.post_number, t.id, topic_slug, category_slug, category_name, c.id
+        GROUP BY p.id, t.id, topic_slug, category_slug, category_name, c.id
         ORDER BY action_count DESC
         LIMIT 5
       SQL
