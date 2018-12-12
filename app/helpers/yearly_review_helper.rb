@@ -19,4 +19,10 @@ module YearlyReviewHelper
     title += "(#{post_number})" if post_number
     "<a href='#{url}' class='inline-onebox'>#{title}</a>"
   end
+
+  def badge_title_link(badge_id, badge_name, badge_icon, badge_image)
+    url = "#{Discourse.base_url}/badges/#{badge_id}/#{badge_name}"
+    title = I18n.t('yearly_review.featured_badge.title', badge_name: badge_name)
+    "<a href='#{url}'>#{title}</a>"
+  end
 end

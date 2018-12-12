@@ -22,8 +22,13 @@ en:
       title: "Most Liked Topics"
       action: "Likes"
       type: "Topics"
-    most_replied_to_topics: "Most Replied to Topics"
+    most_replied_to_topics:
+      title: "Most Replied to Topics"
+      action: "Replies"
+      type: "topics"
     most_liked_posts:
       title: "Most Liked Posts"
       action: "Likes"
       type: "Posts"
+    featured_badge:
+      title: "Users Granted the %{badge_name} Badge"

@@ -37,7 +37,7 @@ after_initialize do
       review_featured_badge = params[:review_featured_badge]
       review_start = Date.parse(params[:review_start]).beginning_of_day
       # todo: remove the + 1.day
-      review_end = (Date.parse(params[:review_end]) + 1.day).end_of_day
+      review_end = (Date.parse(params[:review_end]) + 2.days).end_of_day
       review_publish_category = params[:review_publish_category]
       review_user = current_user
 
@@ -48,6 +48,7 @@ after_initialize do
       @most_liked_topics = most_liked_topics review_categories, review_start, review_end
       @most_liked_posts = most_liked_posts review_categories, review_start, review_end
       @most_replied_to_topics = most_replied_to_topics review_categories, review_start, review_end
+      @featured_badge_users = featured_badge_users review_featured_badge, review_start, review_end
       @user_stats = [
         {key: 'topics_created', users: @most_topics},
         {key: 'replies_created', users: @most_replies},
@@ -56,7 +57,7 @@ after_initialize do
       @category_topics_arr = [
         {key: 'most_liked_topics', topics: @most_liked_topics},
         {key: 'most_liked_posts', topics: @most_liked_posts},
-        # {title_key: 'most_replied_to_topics', topics: @most_replied_to_topics}
+        {key: 'most_replied_to_topics', topics: @most_replied_to_topics}
       ]
 
       # output += most_liked_topics review_start, review_end, review_categories
@@ -134,7 +135,11 @@ after_initialize do
               SELECT
         u.id AS user_id,
         username,
-        uploaded_avatar_id
+        uploaded_avatar_id,
+        b.name,
+        b.icon,
+        b.image,
+        b.id
         FROM badges b
         JOIN user_badges ub
         ON ub.badge_id = b.id
@@ -148,17 +153,19 @@ after_initialize do
       img = badge && badge.image ? " <img src='#{badge.image}' height=20 width=20/>" : ''
       description = badge && badge.description ? badge.description : nil
 
-      output = "<h3>Users Granted the #{badge_name} badge#{img}</h3>"
-      output += "<p>#{description}</p>" if description
+      # output = "<h3>Users Granted the #{badge_name} badge#{img}</h3>"
+      # output += "<p>#{description}</p>" if description
+      #
+      # DB.query(sql).each do |row|
+      #   avatar_template = User.avatar_template(row.username, row.uploaded_avatar_id).gsub(/{size}/, '25')
+      #   avatar_image = "<img src='#{avatar_template}'class='avatar'/>"
+      #   userlink = "<a class='mention' href='/u/#{row.username}'>@#{row.username}</a>"
+      #   output += "<div>#{avatar_image} #{userlink}</div>"
+      # end
+      #
+      # output
 
-      DB.query(sql).each do |row|
-        avatar_template = User.avatar_template(row.username, row.uploaded_avatar_id).gsub(/{size}/, '25')
-        avatar_image = "<img src='#{avatar_template}'class='avatar'/>"
-        userlink = "<a class='mention' href='/u/#{row.username}'>@#{row.username}</a>"
-        output += "<div>#{avatar_image} #{userlink}</div>"
-      end
-
-      output
+      DB.query(sql)
     end
 
     def most_visits(start_date, end_date)
@@ -208,6 +215,7 @@ after_initialize do
 
     # todo: make sure the posts/topics being queried haven't been deleted
     def likes_in_topic_sql
+      # todo: sort out likesc count
       <<~SQL
         SELECT
         t.id,
@@ -217,7 +225,7 @@ after_initialize do
         c.name AS category_name,
         c.id AS category_id,
         NULL AS post_number,
-        COUNT(*) AS like_count
+        COUNT(*) AS action_count
         FROM post_actions pa
         JOIN posts p
         ON p.id = pa.post_id
@@ -231,7 +239,7 @@ after_initialize do
         AND c.read_restricted = 'false'
         AND t.deleted_at IS NULL
         GROUP BY t.id, category_slug, category_name, c.id, post_number
-        ORDER BY like_count DESC
+        ORDER BY action_count DESC
         LIMIT 5
       SQL
     end
@@ -246,7 +254,7 @@ after_initialize do
         c.slug AS category_slug,
         c.name AS category_name,
         c.id AS category_id,
-        COUNT(*) AS like_count
+        COUNT(*) AS action_count
         FROM post_actions pa
         JOIN posts p
         ON p.id = pa.post_id
@@ -260,7 +268,7 @@ after_initialize do
         AND c.read_restricted = 'false'
         AND p.deleted_at IS NULL
         GROUP BY p.post_number, t.id, topic_slug, category_slug, category_name, c.id
-        ORDER BY like_count DESC
+        ORDER BY action_count DESC
         LIMIT 5
       SQL
     end
@@ -272,10 +280,11 @@ after_initialize do
         t.id,
         NULL AS post_number,
         t.slug AS topic_slug,
+        t.title,
         c.slug AS category_slug,
         c.name AS category_name,
         c.id AS category_id,
-        COUNT(*) AS post_count
+        COUNT(*) AS action_count
         FROM posts p
         JOIN topics t
         ON t.id = p.topic_id
@@ -285,8 +294,8 @@ after_initialize do
         AND c.id = :cat_id
         AND c.read_restricted = 'false'
         AND t.deleted_at IS NULL
-        GROUP BY p.id, t.id, topic_slug, category_slug, category_name, c.id
-        ORDER BY post_count DESC
+        GROUP BY t.id, topic_slug, category_slug, category_name, c.id
+        ORDER BY action_count DESC
         LIMIT 5
       SQL
     end

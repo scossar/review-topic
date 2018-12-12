@@ -48,7 +48,7 @@
           <%= raw(topic_link(topic.topic_slug, topic.title, topic.id, topic.post_number)) %>
         </td>
         <td>
-          <%= topic.like_count %>
+          <%= topic.action_count %>
         </td>
       </tr>
     <% end %>
@@ -56,4 +56,13 @@
   <br>
   <% end %>
 <% end %>
+  <% if @featured_badge_users %>
+    <h3><%= raw( badge_title_link(@featured_badge_users[0].id, @featured_badge_users[0].name, @featured_badge_users[0].icon, @featured_badge_users[0].image)) %></h3>
+<% @featured_badge_users.each do |user| %>
+  <span>
+    <%= raw(avatar_image(user.username, user.uploaded_avatar_id)) %>
+    <%= raw(user_link(user.username)) %>
+  </span>
+  <% end %>
+  <% end %>
 </div>
